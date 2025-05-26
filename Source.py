@@ -1,5 +1,3 @@
-# dps_qkd_source.py
-from bitstring import Bits
 import random
 import math
 
@@ -38,18 +36,13 @@ class Sender:
         self.raw_key_bits = [] 
         self.sent_pulses_info = [] 
 
-    def prepare_secret_bit(text):
-        bit_list = [bit for char in text for bit in Bits(uint=ord(char), length=8).bin]
-        return bit_list
-
-
     def prepare_and_send_pulse(self, time_slot, previous_pulse_phase=0):
 
         current_secret_bit = random.randint(0, 1) 
         self.raw_key_bits.append(current_secret_bit)
         desired_phase_difference_for_bit = 0.0 if current_secret_bit == 0 else math.pi
         
-        modulated_phase_on_this_pulse =  (previous_pulse_phase + desired_phase_difference_for_bit) % (2 * math.pi)
+        modulated_phase_on_this_pulse = random.choice([0.0, math.pi])
         
         photon_count = self.light_source.generate_single_pulse_photon_count()
         
@@ -63,6 +56,7 @@ class Sender:
         return modulated_phase_on_this_pulse, photon_count
 
     def get_pulse_info(self, time_slot):
+        """Retrieves information about a pulse Alice sent at a given time slot."""
         for pulse_info in self.sent_pulses_info:
             if pulse_info['time_slot'] == time_slot:
                 return pulse_info
