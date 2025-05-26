@@ -5,6 +5,7 @@ from Hardware import Receiver, OpticalChannel
 import math 
 
 class Node:
+    
     def __init__(self, node_id, avg_photon_number=0.2, detector_efficiency=0.9, dark_count_rate=1e-9):
         self.node_id = node_id
         self.qkd_sender = Sender(avg_photon_number)
@@ -14,7 +15,7 @@ class Node:
         self.traffic_log = []    
 
     def add_link(self, neighbor_node_id, channel_instance):
-
+     
         self.connected_links[neighbor_node_id] = channel_instance
 
     def generate_and_share_key(self, target_node, num_pulses, pulse_repetition_rate_ns):
@@ -42,7 +43,7 @@ class Node:
 
         channel_processed_pulses = []
         for pulse in alice_pulses_sent_info:
-            received_photons = channel.transmitted_pulse(pulse['photon_count'])
+            received_photons = channel.transmit_pulse(pulse['photon_count'])
             channel_processed_pulses.append({
                 'time_slot': pulse['time_slot'],
                 'received_photon_count': received_photons,
@@ -106,7 +107,7 @@ class Node:
         self.shared_keys[target_node.node_id] = alice_sifted_key
         target_node.shared_keys[self.node_id] = bob_sifted_key 
 
-    
+
         self.traffic_log.append({
             'type': 'key_generation',
             'partner': target_node.node_id,
@@ -132,15 +133,14 @@ class Node:
             print(f"Error: Node {self.node_id} does not have a key with {receiver_node_id} to relay.")
             return None
         print(f"Node {self.node_id} (relay) is holding the end-to-end key segment. Ready to extend to {receiver_node_id}.")
-        return key_to_relay 
-
+        return key_to_relay
 
 class Network:
     def __init__(self):
         self.nodes = {} 
 
     def add_node(self, node_id, **kwargs):
-        """Adds a new node to the network."""
+        
         if node_id in self.nodes:
             raise ValueError(f"Node {node_id} already exists.")
         self.nodes[node_id] = Node(node_id, **kwargs)
@@ -155,7 +155,6 @@ class Network:
 
         channel = OpticalChannel(distance_km, attenuation_db_per_km)
         node1.add_link(node2_id, channel)
-        node2.add_link(node1_id, channel) 
         print(f"Connected Node {node1_id} and Node {node2_id} with a {distance_km} km link.")
 
     def establish_end_to_end_raw_key(self, sender_id, receiver_id, path_nodes, num_pulses, pulse_repetition_rate_ns):
@@ -164,30 +163,28 @@ class Network:
 
         print(f"\n--- Establishing end-to-end RAW key from {sender_id} to {receiver_id} via path: {path_nodes} ---")
         
-        
-        current_end_to_end_key_segment = []
+
+        current_end_to_end_key_segment = [] 
         
         for i in range(len(path_nodes) - 1):
             node1_id = path_nodes[i]
             node2_id = path_nodes[i+1]
             
             node1 = self.nodes[node1_id] 
-            node2 = self.nodes[node2_id] 
+            node2 = self.nodes[node2_id]
             
             print(f"Attempting QKD link: {node1_id} <-> {node2_id}")
-            
             
             alice_raw_sifted, bob_raw_sifted = node1.generate_and_share_key(
                 node2, num_pulses, pulse_repetition_rate_ns
             )
             
-
+           
             if i == 0: 
                 current_end_to_end_key_segment = list(alice_raw_sifted) 
-            
-            else:
-                current_end_to_end_key_segment.extend(alice_raw_sifted) 
-
+            else: 
+                
+                current_end_to_end_key_segment.extend(alice_raw_sifted)
             if not alice_raw_sifted:
                 print(f"Failed to establish raw sifted key for link {node1_id}-{node2_id}. Aborting end-to-end key establishment.")
                 return None
